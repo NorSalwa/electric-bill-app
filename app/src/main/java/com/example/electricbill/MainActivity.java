@@ -98,5 +98,11 @@ public class MainActivity extends AppCompatActivity {
 
         // Save to DB
         dbHelper.insertData(month, unit, rebate, total, finalCost);
+
+
+        editTextUnit.setText("");
+        editTextRebate.setText("");
+        spinnerMonth.setSelection(0);
     }
+
 }

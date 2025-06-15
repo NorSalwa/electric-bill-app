@@ -20,7 +20,11 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String query = "CREATE TABLE " + TABLE_NAME + " (" +
-                "month TEXT, unit INTEGER, rebate REAL, total REAL, final REAL)";
+                "month TEXT, " +
+                "unit INTEGER, " +
+                "rebate REAL, " +
+                "total REAL, " +
+                "final REAL)";
         db.execSQL(query);
     }
 
@@ -61,5 +65,27 @@ public class DBHelper extends SQLiteOpenHelper {
 
     public Cursor getDetailsByMonth(String month) {
         return getReadableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE month=?", new String[]{month});
+    }
+
+    public ArrayList<HistoryActivity.Record> getAllRecords() {
+        ArrayList<HistoryActivity.Record> list = new ArrayList<>();
+        SQLiteDatabase db = this.getReadableDatabase();
+        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
+
+        if (cursor.moveToFirst()) {
+            do {
+                String month = cursor.getString(cursor.getColumnIndex("month"));
+                int unit = cursor.getInt(cursor.getColumnIndex("unit"));
+                double rebate = cursor.getDouble(cursor.getColumnIndex("rebate"));
+                double total = cursor.getDouble(cursor.getColumnIndex("total"));
+                double finalCost = cursor.getDouble(cursor.getColumnIndex("final"));
+
+                list.add(new HistoryActivity.Record(month, unit, rebate, total, finalCost));
+            } while (cursor.moveToNext());
+        }
+
+        cursor.close();
+        db.close();
+        return list;
     }
 }
