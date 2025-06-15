@@ -11,8 +11,7 @@ import java.util.ArrayList;
 public class HistoryActivity extends AppCompatActivity {
     ListView listViewResults;
     DBHelper dbHelper;
-
-    ArrayList<Record> allRecords; // custom class to hold data
+    ArrayList<BillRecord> billRecords;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -22,12 +21,10 @@ public class HistoryActivity extends AppCompatActivity {
         listViewResults = findViewById(R.id.listViewResults);
         dbHelper = new DBHelper(this);
 
-        // Get records
-        allRecords = dbHelper.getAllRecords(); // <-- Update your DBHelper to return this
+        billRecords = dbHelper.getAllBillRecords(); // Use custom class
         ArrayList<String> displayList = new ArrayList<>();
-
-        for (Record r : allRecords) {
-            displayList.add(r.month + " - RM " + String.format("%.2f", r.finalCost));
+        for (BillRecord record : billRecords) {
+            displayList.add(record.month + " - RM " + String.format("%.2f", record.finalCost));
         }
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
@@ -35,30 +32,22 @@ public class HistoryActivity extends AppCompatActivity {
         listViewResults.setAdapter(adapter);
 
         listViewResults.setOnItemClickListener((parent, view, position, id) -> {
-            Record selected = allRecords.get(position);
+            int recordId = billRecords.get(position).id; // get id by position
             Intent intent = new Intent(HistoryActivity.this, DetailActivity.class);
-            intent.putExtra("month", selected.month);
-            intent.putExtra("unit", selected.unit);
-            intent.putExtra("rebate", selected.rebate);
-            intent.putExtra("total", selected.total);
-            intent.putExtra("finalCost", selected.finalCost);
+            intent.putExtra("record_id", recordId);
             startActivity(intent);
         });
     }
 
-    // Create this helper class to hold record data
-    static class Record {
+    // Inner class to hold ID and display data
+    static class BillRecord {
+        int id;
         String month;
-        int unit;
-        double rebate;
-        double total;
         double finalCost;
 
-        Record(String month, int unit, double rebate, double total, double finalCost) {
+        public BillRecord(int id, String month, double finalCost) {
+            this.id = id;
             this.month = month;
-            this.unit = unit;
-            this.rebate = rebate;
-            this.total = total;
             this.finalCost = finalCost;
         }
     }

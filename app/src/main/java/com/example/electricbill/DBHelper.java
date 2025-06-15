@@ -20,11 +20,8 @@ public class DBHelper extends SQLiteOpenHelper {
     @Override
     public void onCreate(SQLiteDatabase db) {
         String query = "CREATE TABLE " + TABLE_NAME + " (" +
-                "month TEXT, " +
-                "unit INTEGER, " +
-                "rebate REAL, " +
-                "total REAL, " +
-                "final REAL)";
+                "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
+                "month TEXT, unit INTEGER, rebate REAL, total REAL, final REAL)";
         db.execSQL(query);
     }
 
@@ -45,47 +42,35 @@ public class DBHelper extends SQLiteOpenHelper {
         db.insert(TABLE_NAME, null, values);
     }
 
-    public ArrayList<String> getAllMonthsAndFinalCosts() {
+    public ArrayList<String> getAllDisplayRows() {
         ArrayList<String> list = new ArrayList<>();
-        Cursor cursor = getReadableDatabase().rawQuery("SELECT month, final FROM " + TABLE_NAME, null);
+        Cursor cursor = getReadableDatabase().rawQuery("SELECT id, month, final FROM " + TABLE_NAME, null);
         while (cursor.moveToNext()) {
-            list.add(cursor.getString(0) + " - RM " + String.format("%.2f", cursor.getDouble(1)));
+            int id = cursor.getInt(0);
+            String display = "ID " + id + " | " + cursor.getString(1) + " - RM " + String.format("%.2f", cursor.getDouble(2));
+            list.add(display);
         }
         cursor.close();
         return list;
     }
 
-    public String getMonthByPosition(int position) {
-        Cursor cursor = getReadableDatabase().rawQuery("SELECT month FROM " + TABLE_NAME, null);
-        cursor.moveToPosition(position);
-        String month = cursor.getString(0);
-        cursor.close();
-        return month;
+    public Cursor getDetailsById(int id) {
+        return getReadableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE id=?", new String[]{String.valueOf(id)});
     }
 
-    public Cursor getDetailsByMonth(String month) {
-        return getReadableDatabase().rawQuery("SELECT * FROM " + TABLE_NAME + " WHERE month=?", new String[]{month});
-    }
+    public ArrayList<HistoryActivity.BillRecord> getAllBillRecords() {
+        ArrayList<HistoryActivity.BillRecord> list = new ArrayList<>();
+        Cursor cursor = getReadableDatabase().rawQuery("SELECT id, month, final FROM bills", null);
 
-    public ArrayList<HistoryActivity.Record> getAllRecords() {
-        ArrayList<HistoryActivity.Record> list = new ArrayList<>();
-        SQLiteDatabase db = this.getReadableDatabase();
-        Cursor cursor = db.rawQuery("SELECT * FROM " + TABLE_NAME, null);
-
-        if (cursor.moveToFirst()) {
-            do {
-                String month = cursor.getString(cursor.getColumnIndex("month"));
-                int unit = cursor.getInt(cursor.getColumnIndex("unit"));
-                double rebate = cursor.getDouble(cursor.getColumnIndex("rebate"));
-                double total = cursor.getDouble(cursor.getColumnIndex("total"));
-                double finalCost = cursor.getDouble(cursor.getColumnIndex("final"));
-
-                list.add(new HistoryActivity.Record(month, unit, rebate, total, finalCost));
-            } while (cursor.moveToNext());
+        while (cursor.moveToNext()) {
+            int id = cursor.getInt(cursor.getColumnIndex("id"));
+            String month = cursor.getString(cursor.getColumnIndex("month"));
+            double finalCost = cursor.getDouble(cursor.getColumnIndex("final"));
+            list.add(new HistoryActivity.BillRecord(id, month, finalCost));
         }
 
         cursor.close();
-        db.close();
         return list;
     }
+
 }
